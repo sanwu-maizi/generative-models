@@ -206,6 +206,52 @@ def run_img2img(
         )
         return out
 
+def run_img2img(
+    state,
+    version_dict,
+    is_legacy=False,
+    return_latents=False,
+    filter=None,
+    stage2strength=None,
+):
+    img = load_img()
+    if img is None:
+        return None
+    H, W = img.shape[2], img.shape[3]
+
+    init_dict = {
+        "orig_width": W,
+        "orig_height": H,
+        "target_width": W,
+        "target_height": H,
+    }
+    value_dict = init_embedder_options(
+        get_unique_embedder_keys_from_conditioner(state["model"].conditioner),
+        init_dict,
+        prompt=prompt,
+        negative_prompt=negative_prompt,
+    )
+    strength = st.number_input(
+        "**Img2Img Strength**", value=0.75, min_value=0.0, max_value=1.0
+    )
+    sampler, num_rows, num_cols = init_sampling(
+        img2img_strength=strength,
+        stage2strength=stage2strength,
+    )
+    num_samples = num_rows * num_cols
+
+    if st.button("Sample"):
+        out = do_img2img(
+            repeat(img, "1 ... -> n ...", n=num_samples),
+            state["model"],
+            sampler,
+            value_dict,
+            num_samples,
+            force_uc_zero_embeddings=["txt"] if not is_legacy else [],
+            return_latents=return_latents,
+            filter=filter,
+        )
+        return out
 
 def apply_refiner(
     input,
