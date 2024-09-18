@@ -71,12 +71,12 @@ VERSION2SPECS = {
         "ckpt": "checkpoints/v2-1_768-ema-pruned.safetensors",
     },
     "SDXL-refiner-0.9": {
-        "H": 2048,
-        "W": 2048,
+        "H": 1024,
+        "W": 1024,
         "C": 4,
         "f": 8,
         "is_legacy": True,
-        "config": "/root/autodl-tmp/configs/inference/sd_xl_refiner.yaml",
+        "config": "configs/inference/sd_xl_refiner.yaml",
         "ckpt": "checkpoints/sd_xl_refiner_0.9.safetensors",
     },
     "SDXL-refiner-1.0": {
@@ -249,25 +249,71 @@ def apply_refiner(
     return samples
 
 
-if __name__ == "__main__":
-    st.title("Stable Diffusion")
-    version = st.selectbox("Model Version", list(VERSION2SPECS.keys()), 0)
+def main():
+    # Add language selection dropdown
+    language = st.sidebar.selectbox("Language / 语言", ["English", "中文"], index=0)
+
+    # Define labels and texts in both languages
+    labels = {
+        "English": {
+            "title": "Stable Diffusion",
+            "mode": "Mode",
+            "txt2img": "txt2img",
+            "img2img": "img2img",
+            "load_model": "Load Model",
+            "low_vram": "Low vram mode",
+            "pipeline": "Load SDXL-refiner?",
+            "seed": "Seed",
+            "prompt": "Prompt",
+            "negative_prompt": "Negative Prompt",
+            "strength": "**Img2Img Strength**",
+            "resolution": "Resolution:",
+            "sample_button": "Sample",
+            "refiner": "Running Refinement Stage",
+            "refiner_options": "Refiner Options:",
+            "finish_denoising": "Finish denoising with refiner.",
+        },
+        "中文": {
+            "title": "稳定扩散",
+            "mode": "模式",
+            "txt2img": "文本生成图像",
+            "img2img": "图像生成图像",
+            "load_model": "加载模型",
+            "low_vram": "低显存模式",
+            "pipeline": "加载SDXL-细化器?",
+            "seed": "种子",
+            "prompt": "提示",
+            "negative_prompt": "否定提示",
+            "strength": "**图生图强度**",
+            "resolution": "分辨率:",
+            "sample_button": "生成",
+            "refiner": "运行细化阶段",
+            "refiner_options": "细化选项:",
+            "finish_denoising": "用细化器完成去噪。",
+        }
+    }
+
+    # Use selected language for labels
+    lang = labels[language]
+
+    st.title(lang["title"])
+    version = st.selectbox(lang["mode"], list(VERSION2SPECS.keys()), 0)
     version_dict = VERSION2SPECS[version]
-    if st.checkbox("Load Model"):
-        mode = st.radio("Mode", ("txt2img", "img2img"), 0)
+    if st.checkbox(lang["load_model"]):
+        mode = st.radio(lang["mode"], (lang["txt2img"], lang["img2img"]), 0)
     else:
         mode = "skip"
     st.write("__________________________")
 
-    set_lowvram_mode(st.checkbox("Low vram mode", True))
+    set_lowvram_mode(st.checkbox(lang["low_vram"], True))
 
     if version.startswith("SDXL-base"):
-        add_pipeline = st.checkbox("Load SDXL-refiner?", False)
+        add_pipeline = st.checkbox(lang["pipeline"], False)
         st.write("__________________________")
     else:
         add_pipeline = False
 
-    seed = st.sidebar.number_input("seed", value=42, min_value=0, max_value=int(1e9))
+    seed = st.sidebar.number_input(lang["seed"], value=42, min_value=0, max_value=int(1e9))
     seed_everything(seed)
 
     save_locally, save_path = init_save_locally(os.path.join(SAVE_PATH, version))
@@ -281,13 +327,13 @@ if __name__ == "__main__":
     is_legacy = version_dict["is_legacy"]
 
     prompt = st.text_input(
-        "prompt",
+        lang["prompt"],
         "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k",
     )
     if is_legacy:
-        negative_prompt = st.text_input("negative prompt", "")
+        negative_prompt = st.text_input(lang["negative_prompt"], "")
     else:
-        negative_prompt = ""  # which is unused
+        negative_prompt = ""  # Unused for non-legacy models
 
     stage2strength = None
     finish_denoising = False
@@ -298,7 +344,7 @@ if __name__ == "__main__":
         st.warning(
             f"Running with {version2} as the second stage model. Make sure to provide (V)RAM :) "
         )
-        st.write("**Refiner Options:**")
+        st.write(f"**{lang['refiner_options']}**")
 
         version_dict2 = VERSION2SPECS[version2]
         state2 = init_st(version_dict2, load_filter=False)
@@ -314,11 +360,11 @@ if __name__ == "__main__":
             specify_num_samples=False,
         )
         st.write("__________________________")
-        finish_denoising = st.checkbox("Finish denoising with refiner.", True)
+        finish_denoising = st.checkbox(lang["finish_denoising"], True)
         if not finish_denoising:
             stage2strength = None
 
-    if mode == "txt2img":
+    if mode == lang["txt2img"]:
         out = run_txt2img(
             state,
             version,
@@ -328,7 +374,7 @@ if __name__ == "__main__":
             filter=state.get("filter"),
             stage2strength=stage2strength,
         )
-    elif mode == "img2img":
+    elif mode == lang["img2img"]:
         out = run_img2img(
             state,
             version_dict,
@@ -348,7 +394,7 @@ if __name__ == "__main__":
         samples_z = None
 
     if add_pipeline and samples_z is not None:
-        st.write("**Running Refinement Stage**")
+        st.write(f"**{lang['refiner']}**")
         samples = apply_refiner(
             samples_z,
             state2,
@@ -362,3 +408,12 @@ if __name__ == "__main__":
 
     if save_locally and samples is not None:
         perform_save_locally(save_path, samples)
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
