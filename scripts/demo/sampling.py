@@ -71,12 +71,12 @@ VERSION2SPECS = {
         "ckpt": "checkpoints/v2-1_768-ema-pruned.safetensors",
     },
     "SDXL-refiner-0.9": {
-        "H": 1024,
-        "W": 1024,
+        "H": 2048,
+        "W": 2048,
         "C": 4,
         "f": 8,
         "is_legacy": True,
-        "config": "configs/inference/sd_xl_refiner.yaml",
+        "config": "/root/autodl-tmp/configs/inference/sd_xl_refiner.yaml",
         "ckpt": "checkpoints/sd_xl_refiner_0.9.safetensors",
     },
     "SDXL-refiner-1.0": {
