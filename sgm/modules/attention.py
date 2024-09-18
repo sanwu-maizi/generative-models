@@ -456,7 +456,7 @@ class MemoryEfficientCrossAttention(nn.Module):
 class BasicTransformerBlock(nn.Module):
     ATTENTION_MODES = {
         "softmax": CrossAttention,  # vanilla attention
-        "softmax-xformers": MemoryEfficientCrossAttention,  # ampere
+        "softmax-xformers": CrossAttention,  # ampere
     }
 
     def __init__(
