@@ -124,7 +124,7 @@ def run_txt2img(
         H = st.number_input("H", value=version_dict["H"], min_value=64, max_value=2048)
         W = st.number_input("W", value=version_dict["W"], min_value=64, max_value=2048)
     C = version_dict["C"]
-    F = version_dict["f"]
+    F = version_dict["f"]#23123233123323321232
 
     init_dict = {
         "orig_width": W,
